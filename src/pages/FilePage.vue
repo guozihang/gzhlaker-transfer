@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, type Ref } from 'vue';
+import { onMounted, onBeforeUnmount, ref, type Ref } from 'vue';
 import useFileStore from '@/store/file';
 import { formatBytes } from '@/utils/utils';
 import { PutFile } from '@/api';
@@ -85,7 +85,7 @@ onMounted(() => {
   fileUploadArea.value.addEventListener('dragleave', onDragEvent);
   fileUploadArea.value.addEventListener('drop', onDragEvent);
 });
-onUnmounted(() => {
+onBeforeUnmount(() => {
   fileUploadArea.value.removeEventListener('dragenter', onDragEvent);
   fileUploadArea.value.removeEventListener('dragover', onDragEvent);
   fileUploadArea.value.removeEventListener('dragleave', onDragEvent);
