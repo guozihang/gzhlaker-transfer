@@ -19,9 +19,10 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     try {
         response = await s3.send(command);
     } catch (e) {
-        return new Response("Not found", { status: 404 });
+        return new Response("Not found", { status: 404, headers: { "Cache-Control": "no-store" } });
     }
     const headers = new Headers();
+    headers.set('cache-control', 'no-store');
     for (const [key, value] of Object.entries(response.Metadata)) {
         headers.set(key, value);
     }
@@ -39,7 +40,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     headers.set('etag', response.ETag);
 
     if (headers.get("x-store-visibility") !== "public" && !auth(env, context.request)) {
-        return new Response("Not found", { status: 404 });
+        return new Response("Not found", { status: 404, headers: { "Cache-Control": "no-store" } });
     }
     return new Response(
         response.Body.transformToWebStream(),

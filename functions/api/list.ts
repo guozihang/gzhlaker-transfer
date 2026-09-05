@@ -25,5 +25,5 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     } catch (e) {
         return new Response("Not found", { status: 404 });
     }
-    return new Response(JSON.stringify(response), { status: 200 });
+    return new Response(JSON.stringify(response), { status: 200, headers: { "Cache-Control": "no-store" } });
 }
