@@ -1,7 +1,11 @@
 <script setup lang="ts">
+import { onBeforeMount, ref, type Ref } from 'vue';
 import { useI18n } from "vue-i18n";
 import useI18nStore from "../store/i18n";
 import { useRouter } from "vue-router";
+import { ListFiles } from "@/api";
+import { formatBytes } from "@/utils/utils";
+import type { _Object } from '@aws-sdk/client-s3';
 
 const router = useRouter();
 
@@ -22,6 +26,25 @@ let onClipAreaClick = () => {
 let onUploadClick = () => {
   router.push("/file");
 };
+
+let uploadedFiles: Ref<_Object[]> = ref([]);
+
+const refreshFiles = async () => {
+  const res = await ListFiles();
+  if (res.hasOwnProperty('Contents') && res.Contents) {
+    uploadedFiles.value = res.Contents;
+  } else {
+    uploadedFiles.value = [];
+  }
+};
+
+onBeforeMount(async () => {
+  await refreshFiles();
+});
+
+function decodeKey(key: string) {
+  return decodeURIComponent(key)
+}
 </script>
 
 <template>
@@ -37,6 +60,19 @@ let onUploadClick = () => {
         <router-link to="/filemanage" class="link-hint">{{ $t("index.clip_channel_title") }}</router-link>
       </div>
       <div class="clip-area" @click="onClipAreaClick"></div>
+    </div>
+    <div class="pannel file-list-pannel">
+      <div class="text-2xl flex flex-row items-center">
+        <router-link to="/filemanage" class="link-hint">{{ $t("page_title.filemanage") }}</router-link>
+      </div>
+      <div v-for="file in uploadedFiles" :key="file.Key"
+        class="w-full flex flex-row items-center mt-4 rounded border-1 border-gray-300 px-2 py-1">
+        <div class="w-10 h-10 i-mdi-file-document-outline"></div>
+        <div class="flex flex-col title">
+          <a class="text-lg font-semibold" :title="decodeKey(file.Key!)" :href="`/${file.Key}`" target="_blank">{{ decodeKey(file.Key!) }}</a>
+          <div class="text-sm text-gray">{{ formatBytes(file.Size ?? 0) }}</div>
+        </div>
+      </div>
     </div>
     <!-- <div class="pannel tips-pannel">{{ $t("index.tips_content") }}</div> -->
     <select v-model="$i18n.locale" class="locale-changer" @change="updateLocale($i18n.locale)">
@@ -74,6 +110,16 @@ let onUploadClick = () => {
   --uno: border-dashed border-1 border-gray-400 h-30 mt-2 cursor-pointer;
   background: url(../assets/clipboard.svg) center center no-repeat;
   background-color: #f8f9fa;
+}
+
+.file-list-pannel {
+  background-color: #f8f9fa;
+}
+
+.title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .link-hint {
