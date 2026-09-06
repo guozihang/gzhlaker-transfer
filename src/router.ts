@@ -3,8 +3,6 @@ import Cookies from 'js-cookie'
 import i18n from "./i18n";
 
 import IndexPage from "./pages/IndexPage.vue";
-import ClipPage from "./pages/ClipPage.vue";
-import FilePage from "./pages/FilePage.vue";
 import LoginPage from "./pages/LoginPage.vue";
 
 const $t = i18n.global.t;
@@ -19,28 +17,24 @@ const routes = [
         component: IndexPage,
     },
     {
-        path: "/clip",
-        name: "clip",
-        meta: {
-            title: $t("page_title.clip"),
-        },
-        component: ClipPage,
-    },
-    {
-        path: "/file",
-        name: "file",
-        meta: {
-            title: $t("page_title.file"),
-        },
-        component: FilePage,
-    },
-    {
         path: "/login",
         name: "login",
         meta: {
             title: $t("page_title.login"),
         },
         component: LoginPage,
+    },
+    {
+        path: "/clip",
+        redirect: "/",
+    },
+    {
+        path: "/file",
+        redirect: "/",
+    },
+    {
+        path: "/filemanage",
+        redirect: "/",
     },
 ];
 

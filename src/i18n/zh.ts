@@ -19,8 +19,6 @@ export default {
     },
     page_title: {
         index: '主页',
-        clip: '剪贴板',
-        file: '文件',
         login: '登录',
         filemanage: '文件管理',
     }

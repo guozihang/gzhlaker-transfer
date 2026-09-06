@@ -19,8 +19,6 @@ export default {
     },
     page_title: {
         index: 'Index',
-        clip: 'Clipboard',
-        file: 'Files',
         login: 'Login',
         filemanage: 'File Manage',
     }
