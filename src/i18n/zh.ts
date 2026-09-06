@@ -4,6 +4,8 @@ export default {
         public: '公开',
         private: '私有',
         save: '保存',
+        download: '下载',
+        delete_confirm: '确定要删除吗?',
     },
     index: {
         file_channel_title: '文件',

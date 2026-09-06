@@ -4,6 +4,8 @@ export default {
         public: 'Public',
         private: 'Private',
         save: 'Save',
+        download: 'Download',
+        delete_confirm: 'Delete this item?',
     },
     index: {
         file_channel_title: 'Files',

@@ -4,7 +4,7 @@ import { useI18n } from "vue-i18n";
 import useI18nStore from "../store/i18n";
 import { useRouter } from "vue-router";
 import axios from 'axios';
-import { ListFiles } from "@/api";
+import { DeleteFile, ListFiles } from "@/api";
 import { formatBytes } from "@/utils/utils";
 import type { _Object } from '@aws-sdk/client-s3';
 
@@ -21,7 +21,7 @@ let updateLocale = (locale: string) => {
   i18nStore.setLocale(locale);
 };
 
-const { locale } = useI18n();
+const { locale, t } = useI18n();
 if (i18nStore.locale !== "") {
   locale.value = i18nStore.locale;
 }
@@ -74,6 +74,13 @@ onBeforeMount(async () => {
 function decodeKey(key: string) {
   return decodeURIComponent(key)
 }
+
+const onDeleteItemClick = async (key?: string) => {
+  if (!key) return;
+  if (!confirm(t('common.delete_confirm'))) return;
+  await DeleteFile(key);
+  await refreshFiles();
+};
 </script>
 
 <template>
@@ -99,6 +106,10 @@ function decodeKey(key: string) {
         <div class="flex flex-row items-center">
           <div class="w-6 h-6 i-mdi-text-box-outline"></div>
           <a class="text-sm text-gray title ml-1" :title="decodeKey(item.Key!)" :href="`/${item.Key}`" target="_blank">{{ decodeKey(item.Key!) }}</a>
+          <div class="ml-auto flex flex-row items-center">
+            <a class="w-6 h-6 i-mdi-download-outline cursor-pointer" :title="$t('common.download')" :href="`/${item.Key}`" download></a>
+            <div class="w-6 h-6 i-mdi-trash-can-outline cursor-pointer ml-2" @click="onDeleteItemClick(item.Key)"></div>
+          </div>
         </div>
         <pre v-if="textContents[item.Key!] !== undefined" class="text-preview">{{ textContents[item.Key!] }}</pre>
         <div v-else class="text-sm text-gray my-2">...</div>
@@ -106,9 +117,13 @@ function decodeKey(key: string) {
       <div v-for="file in fileItems" :key="file.Key"
         class="w-full flex flex-row items-center mt-4 rounded border-1 border-gray-300 px-2 py-1">
         <div class="w-10 h-10 i-mdi-file-document-outline"></div>
-        <div class="flex flex-col title">
+        <div class="flex flex-col title flex-1 min-w-0">
           <a class="text-lg font-semibold" :title="decodeKey(file.Key!)" :href="`/${file.Key}`" target="_blank">{{ decodeKey(file.Key!) }}</a>
           <div class="text-sm text-gray">{{ formatBytes(file.Size ?? 0) }}</div>
+        </div>
+        <div class="ml-auto flex flex-row items-center">
+          <a class="w-6 h-6 i-mdi-download-outline cursor-pointer" :title="$t('common.download')" :href="`/${file.Key}`" download></a>
+          <div class="w-6 h-6 i-mdi-trash-can-outline cursor-pointer ml-2" @click="onDeleteItemClick(file.Key)"></div>
         </div>
       </div>
     </div>
