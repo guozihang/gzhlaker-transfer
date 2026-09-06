@@ -5,11 +5,8 @@ const useFileStore = defineStore(
     'file',
     () => {
         const visibility = ref("public");
-        function setVisibility(newVisibility: string) {
-            visibility.value = newVisibility
-        }
 
-        return { visibility, setVisibility }
+        return { visibility }
     },
     {
         persist: true,

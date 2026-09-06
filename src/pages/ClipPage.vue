@@ -14,7 +14,7 @@ const modified = ref(false);
 const editorElement = ref();
 let editor: EditorView;
 
-let startState = EditorState.create({
+const startState = EditorState.create({
   doc: "",
   extensions: [
     minimalSetup,
@@ -44,32 +44,31 @@ onMounted(() => {
   })
 })
 
-let filename = ref(getRandomFilename());
+const filename = ref(getRandomFilename());
 
-let refreshRandomFileName = () => {
+const refreshRandomFileName = () => {
   filename.value = getRandomFilename();
 }
 
 const clipStore = useClipStore();
 
-let onSaveBtnClick = async () => {
+const onSaveBtnClick = async () => {
   await PutFile(filename.value, code.value, clipStore.visibility, "text");
   modified.value = false;
 }
 
-let saveContentKeydown = (e: KeyboardEvent) => {
+const saveContentKeydown = (e: KeyboardEvent) => {
   if ((e.ctrlKey && e.key === "s") || (e.metaKey && e.key === "s")) {
     e.preventDefault();
     onSaveBtnClick();
   }
 }
 
-let onPasteFile = async (e: ClipboardEvent) => {
+const onPasteFile = async (e: ClipboardEvent) => {
   if (!e.clipboardData?.files.length) {
     return;
   }
   const file = e.clipboardData.files[0];
-  console.log(file);
   const text = await file.text();
   const cursor = editor.state.selection.main.head;
   editor.dispatch({
@@ -111,22 +110,6 @@ onBeforeUnmount(() => {
 </template>
 
 <style>
-html,
-body,
-#app {
-  margin: 0;
-  padding: 0;
-  background-color: #f8f9fa;
-}
-
-.pannel {
-  --uno: my-6 px-4 py-4 max-w-screen-md w-4/5 rounded shadow-md;
-}
-
-.tips-pannel {
-  background-color: #d1e7dd;
-}
-
 .text-area {
   --uno: rounded max-w-screen-md w-4/5 border-1 border-gray-300;
   background-color: white;

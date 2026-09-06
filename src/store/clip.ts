@@ -5,11 +5,8 @@ const useClipStore = defineStore(
     'clip',
     () => {
         const visibility = ref("public");
-        function setVisibility(newVisibility: string) {
-            visibility.value = newVisibility
-        }
 
-        return { visibility, setVisibility }
+        return { visibility }
     },
     {
         persist: true,

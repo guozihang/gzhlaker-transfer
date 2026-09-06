@@ -10,7 +10,6 @@ export default {
     index: {
         file_channel_title: '文件',
         clip_channel_title: '剪贴板',
-        tips_content: '直接粘贴/拖动试试'
     },
     login: {
         login_title: '登录以继续',

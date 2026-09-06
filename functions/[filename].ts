@@ -1,6 +1,5 @@
-import { GetObjectCommand, CopyObjectCommand, DeleteObjectCommand, GetObjectCommandOutput } from "@aws-sdk/client-s3";
+import { GetObjectCommand, DeleteObjectCommand, GetObjectCommandOutput } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import mime from 'mime/lite';
 
 import Env from './utils/Env';
@@ -76,32 +75,6 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
     return new Response("OK", { status: 200 });
 }
 
-export const onRequestPatch: PagesFunction<Env> = async (context) => {
-    const { params, env, request } = context;
-    if (!auth(env, request)) {
-        return new Response("Unauthorized", { status: 401 });
-    }
-    const { filename } = params;
-    const { BUCKET } = env;
-    const s3 = createS3Client(env);
-    const headers = new Headers(request.headers);
-    const x_store_headers = [];
-    for (const [key, value] of headers.entries()) {
-        if (key.startsWith('x-store-')) {
-            x_store_headers.push([key, value]);
-        }
-    }
-    const command = new CopyObjectCommand({
-        Bucket: BUCKET!,
-        CopySource: `${BUCKET}/${filename}`,
-        Key: filename as string,
-        MetadataDirective: "REPLACE",
-        Metadata: Object.fromEntries(x_store_headers),
-    });
-    await s3.send(command);
-    return new Response("OK", { status: 200 });
-};
-
 export const onRequestDelete: PagesFunction<Env> = async (context) => {
     const { params, env, request } = context;
     if (!auth(env, request)) {
@@ -114,14 +87,7 @@ export const onRequestDelete: PagesFunction<Env> = async (context) => {
         Bucket: BUCKET!,
         Key: filename as string
     });
-    const url = await getSignedUrl(
-        s3,
-        command,
-        { expiresIn: 3600 }
-    );
-    await fetch(url, {
-        method: 'DELETE',
-    });
+    await s3.send(command);
     return new Response("OK", { status: 200 });
 }
 

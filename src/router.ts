@@ -6,7 +6,6 @@ import IndexPage from "./pages/IndexPage.vue";
 import ClipPage from "./pages/ClipPage.vue";
 import FilePage from "./pages/FilePage.vue";
 import LoginPage from "./pages/LoginPage.vue";
-import FileManagePage from "./pages/FileManagePage.vue";
 
 const $t = i18n.global.t;
 
@@ -34,14 +33,6 @@ const routes = [
             title: $t("page_title.file"),
         },
         component: FilePage,
-    },
-    {
-        path: "/filemanage",
-        name: "filemanage",
-        meta: {
-            title: $t("page_title.filemanage"),
-        },
-        component: FileManagePage,
     },
     {
         path: "/login",
@@ -73,4 +64,3 @@ router.beforeEach((to, from, next) => {
 })
 
 export default router;
-export { routes };

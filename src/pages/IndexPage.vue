@@ -3,8 +3,7 @@ import { computed, onBeforeMount, reactive, ref, type Ref } from 'vue';
 import { useI18n } from "vue-i18n";
 import useI18nStore from "../store/i18n";
 import { useRouter } from "vue-router";
-import axios from 'axios';
-import { DeleteFile, ListFiles } from "@/api";
+import { DeleteFile, GetFile, ListFiles } from "@/api";
 import { formatBytes } from "@/utils/utils";
 import type { _Object } from '@aws-sdk/client-s3';
 
@@ -17,7 +16,7 @@ const MAX_INLINE_TEXT_SIZE = 1024 * 1024;
 const router = useRouter();
 
 const i18nStore = useI18nStore();
-let updateLocale = (locale: string) => {
+const updateLocale = (locale: string) => {
   i18nStore.setLocale(locale);
 };
 
@@ -26,15 +25,15 @@ if (i18nStore.locale !== "") {
   locale.value = i18nStore.locale;
 }
 
-let onClipAreaClick = () => {
+const onClipAreaClick = () => {
   router.push("/clip");
 };
 
-let onUploadClick = () => {
+const onUploadClick = () => {
   router.push("/file");
 };
 
-let uploadedFiles: Ref<FileItem[]> = ref([]);
+const uploadedFiles: Ref<FileItem[]> = ref([]);
 
 const textContents = reactive<Record<string, string>>({});
 
@@ -46,8 +45,7 @@ const fileItems = computed(() => uploadedFiles.value.filter((item) => !isInlineT
 
 const fetchTextContent = async (item: FileItem) => {
   try {
-    const res = await axios.get(`/${item.Key}`, { responseType: 'text' });
-    textContents[item.Key!] = res.data;
+    textContents[item.Key!] = await GetFile(item.Key!);
   } catch (e) {
     // 内容拉取失败时保持占位,不影响文件形态
   }
@@ -58,7 +56,7 @@ const refreshFiles = async () => {
   if (res.hasOwnProperty('Contents') && res.Contents) {
     uploadedFiles.value = res.Contents as FileItem[];
     for (const item of uploadedFiles.value) {
-      if (isInlineText(item)) {
+      if (isInlineText(item) && textContents[item.Key!] === undefined) {
         fetchTextContent(item);
       }
     }
@@ -79,7 +77,8 @@ const onDeleteItemClick = async (key?: string) => {
   if (!key) return;
   if (!confirm(t('common.delete_confirm'))) return;
   await DeleteFile(key);
-  await refreshFiles();
+  uploadedFiles.value = uploadedFiles.value.filter((item) => item.Key !== key);
+  delete textContents[key];
 };
 </script>
 
@@ -87,20 +86,18 @@ const onDeleteItemClick = async (key?: string) => {
   <div class="flex flex-col items-center">
     <div class="pannel file-pannel">
       <div class="text-2xl flex flex-row items-center">
-        <router-link to="/filemanage" class="link-hint">{{ $t("index.file_channel_title") }}</router-link>
+        <router-link to="/file" class="link-hint">{{ $t("index.file_channel_title") }}</router-link>
       </div>
       <div class="upload-area" @click="onUploadClick"></div>
     </div>
     <div class="pannel clip-pannel">
       <div class="text-2xl flex flex-row items-center">
-        <router-link to="/filemanage" class="link-hint">{{ $t("index.clip_channel_title") }}</router-link>
+        <router-link to="/clip" class="link-hint">{{ $t("index.clip_channel_title") }}</router-link>
       </div>
       <div class="clip-area" @click="onClipAreaClick"></div>
     </div>
     <div class="pannel file-list-pannel">
-      <div class="text-2xl flex flex-row items-center">
-        <router-link to="/filemanage" class="link-hint">{{ $t("page_title.filemanage") }}</router-link>
-      </div>
+      <div class="text-2xl flex flex-row items-center">{{ $t("page_title.filemanage") }}</div>
       <div v-for="item in textItems" :key="item.Key"
         class="w-full mt-4 rounded border-1 border-gray-300 px-2 py-1">
         <div class="flex flex-row items-center">
@@ -127,7 +124,6 @@ const onDeleteItemClick = async (key?: string) => {
         </div>
       </div>
     </div>
-    <!-- <div class="pannel tips-pannel">{{ $t("index.tips_content") }}</div> -->
     <select v-model="$i18n.locale" class="locale-changer" @change="updateLocale($i18n.locale)">
       <option v-for="locale in $i18n.availableLocales" :key="`locale-${locale}`" :value="locale">{{ locale }}</option>
     </select>
@@ -145,10 +141,6 @@ const onDeleteItemClick = async (key?: string) => {
 
 .clip-pannel {
   background-color: #F27E93;
-}
-
-.tips-pannel {
-  background-color: #d1e7dd;
 }
 
 .upload-area {

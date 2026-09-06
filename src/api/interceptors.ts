@@ -4,9 +4,7 @@ import { toast } from '@/utils/toast';
 
 const initInterceptors = () => {
     axios.interceptors.response.use(
-        async (response) => {
-            return response;
-        },
+        null,
         async (error: AxiosError) => {
             toast("Error", "error");
             if (error.response?.status === 401) {

@@ -6,9 +6,9 @@ import { PutFile } from '@/api';
 
 const fileStore = useFileStore();
 
-let fileUploadInput = ref();
+const fileUploadInput = ref();
 
-let requestUploadFile = () => {
+const requestUploadFile = () => {
   fileUploadInput.value.click();
 }
 
@@ -19,7 +19,7 @@ interface UploadedFile {
   done: boolean;
 }
 
-let uploadedFiles: Ref<UploadedFile[]> = ref([]);
+const uploadedFiles: Ref<UploadedFile[]> = ref([]);
 
 const uploadSingle = async (index: number, filename: string, file: File) => {
   await PutFile(filename, file, fileStore.visibility, "file");
@@ -49,7 +49,7 @@ onMounted(() => {
   });
 });
 
-let fileUploadArea = ref();
+const fileUploadArea = ref();
 
 const onDragEvent = async (event: DragEvent) => {
   event.preventDefault();
@@ -122,29 +122,9 @@ onBeforeUnmount(() => {
 </template>
 
 <style>
-html,
-body,
-#app {
-  margin: 0;
-  padding: 0;
-  background-color: #f8f9fa;
-}
-
-.pannel {
-  --uno: my-6 px-4 py-4 max-w-screen-md w-4/5 rounded shadow-md;
-}
-
-.tips-pannel {
-  background-color: #d1e7dd;
-}
-
 .file-area {
   --uno: rounded max-w-screen-md w-4/5 border-1 border-gray-300;
   background-color: white;
-}
-
-.file-area .header {
-  background-color: #f5f5f5;
 }
 
 .file-area .footer {
@@ -154,21 +134,6 @@ body,
 
 .file-area .footer .public-select {
   --uno: border-1 rounded px-6 py-1.5 text-sm;
-  border-color: #d1d1d1;
-  outline-color: #0969da;
-}
-
-.file-area .footer .save-btn {
-  --uno: rounded px-6 py-1.5 text-sm ml-auto text-white;
-  background-color: #1f883d;
-}
-
-.file-area .footer .save-btn:hover {
-  background-color: #1a7f37;
-}
-
-.file-area .header .filename-input {
-  --uno: border-1 rounded px-3 py-2 text-sm w-60;
   border-color: #d1d1d1;
   outline-color: #0969da;
 }

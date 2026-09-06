@@ -14,22 +14,6 @@ function createS3Client(env: Env) {
     });
 }
 
-const hmacEncode = async (data: string, key: string) => {
-    const encoder = new TextEncoder();
-    const encodedKey = encoder.encode(key);
-    const key_encoded = await crypto.subtle.importKey(
-        "raw",
-        encodedKey,
-        { name: "HMAC", hash: "SHA-256" },
-        false,
-        ["sign"]
-    );
-    const encodedData = encoder.encode(data);
-    const signature = await crypto.subtle.sign("HMAC", key_encoded, encodedData);
-    const base64Mac = btoa(String.fromCharCode(...new Uint8Array(signature)));
-    return base64Mac;
-}
-
 const hmacVerify = async (data: string, key: string, sign: string) => {
     const encoder = new TextEncoder();
     const encodedKey = encoder.encode(key);
@@ -47,9 +31,6 @@ const hmacVerify = async (data: string, key: string, sign: string) => {
 }
 
 const isEqual = (a: string, b: string) => {
-    if (a.length !== b.length) {
-        // Minimise the possibility of a timing attack via how long encoding takes on the strings
-    }
     const encoder = new TextEncoder();
     const encodedA = encoder.encode(a);
     const encodedB = encoder.encode(b);
@@ -85,8 +66,4 @@ const auth = (env: Env, request: Request) => {
     return false;
 };
 
-const sign = async (path: string, key: string) => {
-    return await hmacEncode(path, key);
-}
-
-export { createS3Client, auth, sign };
+export { createS3Client, auth };

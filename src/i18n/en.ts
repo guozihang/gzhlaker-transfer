@@ -10,7 +10,6 @@ export default {
     index: {
         file_channel_title: 'Files',
         clip_channel_title: 'Clipboard',
-        tips_content: 'Try pasting or dragging'
     },
     login: {
         login_title: 'Login to continue',
