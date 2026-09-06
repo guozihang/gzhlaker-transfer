@@ -1,11 +1,18 @@
 <script setup lang="ts">
-import { onBeforeMount, ref, type Ref } from 'vue';
+import { computed, onBeforeMount, reactive, ref, type Ref } from 'vue';
 import { useI18n } from "vue-i18n";
 import useI18nStore from "../store/i18n";
 import { useRouter } from "vue-router";
+import axios from 'axios';
 import { ListFiles } from "@/api";
 import { formatBytes } from "@/utils/utils";
 import type { _Object } from '@aws-sdk/client-s3';
+
+type FileItem = _Object & {
+  Metadata?: Record<string, string>;
+};
+
+const MAX_INLINE_TEXT_SIZE = 1024 * 1024;
 
 const router = useRouter();
 
@@ -27,12 +34,34 @@ let onUploadClick = () => {
   router.push("/file");
 };
 
-let uploadedFiles: Ref<_Object[]> = ref([]);
+let uploadedFiles: Ref<FileItem[]> = ref([]);
+
+const textContents = reactive<Record<string, string>>({});
+
+const isInlineText = (item: FileItem) =>
+  item.Metadata?.['x-store-type'] === 'text' && (item.Size ?? 0) <= MAX_INLINE_TEXT_SIZE;
+
+const textItems = computed(() => uploadedFiles.value.filter(isInlineText));
+const fileItems = computed(() => uploadedFiles.value.filter((item) => !isInlineText(item)));
+
+const fetchTextContent = async (item: FileItem) => {
+  try {
+    const res = await axios.get(`/${item.Key}`, { responseType: 'text' });
+    textContents[item.Key!] = res.data;
+  } catch (e) {
+    // 内容拉取失败时保持占位,不影响文件形态
+  }
+};
 
 const refreshFiles = async () => {
   const res = await ListFiles();
   if (res.hasOwnProperty('Contents') && res.Contents) {
-    uploadedFiles.value = res.Contents;
+    uploadedFiles.value = res.Contents as FileItem[];
+    for (const item of uploadedFiles.value) {
+      if (isInlineText(item)) {
+        fetchTextContent(item);
+      }
+    }
   } else {
     uploadedFiles.value = [];
   }
@@ -65,7 +94,16 @@ function decodeKey(key: string) {
       <div class="text-2xl flex flex-row items-center">
         <router-link to="/filemanage" class="link-hint">{{ $t("page_title.filemanage") }}</router-link>
       </div>
-      <div v-for="file in uploadedFiles" :key="file.Key"
+      <div v-for="item in textItems" :key="item.Key"
+        class="w-full mt-4 rounded border-1 border-gray-300 px-2 py-1">
+        <div class="flex flex-row items-center">
+          <div class="w-6 h-6 i-mdi-text-box-outline"></div>
+          <a class="text-sm text-gray title ml-1" :title="decodeKey(item.Key!)" :href="`/${item.Key}`" target="_blank">{{ decodeKey(item.Key!) }}</a>
+        </div>
+        <pre v-if="textContents[item.Key!] !== undefined" class="text-preview">{{ textContents[item.Key!] }}</pre>
+        <div v-else class="text-sm text-gray my-2">...</div>
+      </div>
+      <div v-for="file in fileItems" :key="file.Key"
         class="w-full flex flex-row items-center mt-4 rounded border-1 border-gray-300 px-2 py-1">
         <div class="w-10 h-10 i-mdi-file-document-outline"></div>
         <div class="flex flex-col title">
@@ -120,6 +158,16 @@ function decodeKey(key: string) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.text-preview {
+  margin: 8px 0;
+  max-height: 200px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-size: 0.875rem;
+  color: #333;
 }
 
 .link-hint {

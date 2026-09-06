@@ -1,4 +1,4 @@
-import { ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { ListObjectsV2Command, HeadObjectCommand } from "@aws-sdk/client-s3";
 
 import Env from "../utils/Env";
 import { createS3Client } from "../utils/utils";
@@ -24,6 +24,16 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         response = await s3.send(command);
     } catch (e) {
         return new Response("Not found", { status: 404 });
+    }
+    if (response.Contents) {
+        response.Contents = await Promise.all(response.Contents.map(async (object) => {
+            try {
+                const head = await s3.send(new HeadObjectCommand({ Bucket: BUCKET!, Key: object.Key! }));
+                return { ...object, Metadata: head.Metadata };
+            } catch (e) {
+                return object;
+            }
+        }));
     }
     return new Response(JSON.stringify(response), { status: 200, headers: { "Cache-Control": "no-store" } });
 }
